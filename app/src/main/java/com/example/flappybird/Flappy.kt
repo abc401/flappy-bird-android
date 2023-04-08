@@ -16,17 +16,17 @@ class Flappy(private var pos: Vec2) {
     fun update(deltaT: Number) {
         vel += acc * deltaT
         pos += vel * deltaT
-        println("DeltaT: $deltaT")
-        println("Flappy Position: (${pos.x}, ${pos.y})")
+//        println("DeltaT: $deltaT")
+//        println("Flappy Position: (${pos.x}, ${pos.y})")
+        println("Velocity: ${vel.x}, ${vel.y}")
     }
 
     fun flap() {
-        vel = Vec2(y = -1F)
-        println("Game view clicked!")
+        vel.y = -0.8F
     }
 
     fun draw(canvas: Canvas) {
         canvas.drawCircle(pos.x, pos.y, 10F, paint)
-        println("Flappy drawn to canvas!")
+//        println("Flappy drawn to canvas!")
     }
 }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-val GAME_GRAVITY = Vec2(0F, 0.001F)
+val GAME_GRAVITY = Vec2(0F, 0.002F)
 
 @OptIn(DelicateCoroutinesApi::class)
 class GameView(context: Context) : View(context) {
@@ -43,7 +43,7 @@ class GameView(context: Context) : View(context) {
         GlobalScope.launch {
             while (playing.get()) {
                 update()
-                delay(50L)
+                delay(15L)
             }
         }
     }
@@ -66,6 +66,5 @@ class GameView(context: Context) : View(context) {
             return
         }
         flappy.draw(canvas)
-//        update()
     }
 }
