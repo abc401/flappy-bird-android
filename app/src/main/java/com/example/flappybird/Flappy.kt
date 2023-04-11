@@ -11,14 +11,11 @@ class Flappy(private var pos: Vec2) {
         style = Paint.Style.FILL_AND_STROKE
     }
     private var vel = Vec2()
-    private val acc = GAME_GRAVITY
+    private val acc = GameView.gameGravity
 
     fun update(deltaT: Number) {
         vel += acc * deltaT
         pos += vel * deltaT
-//        println("DeltaT: $deltaT")
-//        println("Flappy Position: (${pos.x}, ${pos.y})")
-        println("Velocity: ${vel.x}, ${vel.y}")
     }
 
     fun flap() {
@@ -27,6 +24,5 @@ class Flappy(private var pos: Vec2) {
 
     fun draw(canvas: Canvas) {
         canvas.drawCircle(pos.x, pos.y, 10F, paint)
-//        println("Flappy drawn to canvas!")
     }
 }

@@ -1,25 +1,36 @@
 package com.example.flappybird
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.os.SystemClock
+import android.util.AttributeSet
 import android.view.View
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-val GAME_GRAVITY = Vec2(0F, 0.002F)
+
 
 @OptIn(DelicateCoroutinesApi::class)
-class GameView(context: Context) : View(context) {
-    private val dimensions: Vec2
-    private val flappy: Flappy
+class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+    companion object {
+        val gameGravity = Vec2(0F, 0.002F)
+        const val minObstacleGap = 100
+    }
+
+    private val dimensions = run {
+        val displayMetrics = context.resources.displayMetrics
+        Vec2(
+            displayMetrics.widthPixels.toFloat(),
+            displayMetrics.heightPixels.toFloat()
+        )
+    }
+
     private var playing = AtomicBoolean()
 
-//    private var frameRate = 30F
+    private val flappy: Flappy
+
+    private var obstacles: Array<Obstacle>
+
     private var previousFrameStartTime = 0L
     private var currentFrameStartTime = SystemClock.elapsedRealtime()
     private var deltaT = 0L
@@ -27,11 +38,6 @@ class GameView(context: Context) : View(context) {
 
     init {
         playing.set(true)
-        val displayMetrics = context.resources.displayMetrics
-        dimensions = Vec2(
-            displayMetrics.widthPixels.toFloat(),
-            displayMetrics.heightPixels.toFloat()
-        )
         flappy = Flappy(Vec2(30F, dimensions.y/2))
 
         updateDeltaT()
@@ -40,10 +46,20 @@ class GameView(context: Context) : View(context) {
             flappy.flap()
         }
 
+        val obstacleCount = (dimensions.x / (Obstacle.width + minObstacleGap)).toInt()
+        val totalEmptySpace = dimensions.x - (obstacleCount * Obstacle.width)
+        val actualObstacleGap = totalEmptySpace / obstacleCount
+
+        var currentObstaclePosition = dimensions.x
+        obstacles = Array(obstacleCount) {
+            val obstacle = Obstacle(currentObstaclePosition, dimensions)
+            currentObstaclePosition += Obstacle.width + actualObstacleGap
+            obstacle
+        }
+
         GlobalScope.launch {
             while (playing.get()) {
                 update()
-                delay(15L)
             }
         }
     }
@@ -57,6 +73,9 @@ class GameView(context: Context) : View(context) {
     private fun update() {
         updateDeltaT()
         flappy.update(deltaT)
+        obstacles.forEach {
+            it.update(deltaT)
+        }
         invalidate()
     }
 
@@ -66,5 +85,8 @@ class GameView(context: Context) : View(context) {
             return
         }
         flappy.draw(canvas)
+        obstacles.forEach {
+            it.draw(canvas)
+        }
     }
 }

@@ -2,16 +2,12 @@ package com.example.flappybird
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Choreographer
-import android.view.View
-import android.widget.ImageView
 
 class GamePlay : AppCompatActivity() {
+//    private lateinit var gameView: GameView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(GameView(this))
-    }
-    fun onClick(view: View) {
-        println("FrameLayout Clicked!")
+        setContentView(R.layout.activity_game_play)
+//        gameView = findViewById(R.id.game_view)
     }
 }
