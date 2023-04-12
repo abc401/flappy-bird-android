@@ -60,6 +60,7 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         GlobalScope.launch {
             while (playing.get()) {
                 update()
+                delay(15L)
             }
         }
     }
@@ -76,7 +77,23 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         obstacles.forEach {
             it.update(deltaT)
         }
+        if (isGameOver()) {
+            onGameOver()
+        }
         invalidate()
+    }
+
+    private fun isGameOver(): Boolean {
+        obstacles.forEach {
+            if (flappy.overlaps(it)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun onGameOver() {
+        playing.set(false)
     }
 
     override fun onDraw(canvas: Canvas?) {

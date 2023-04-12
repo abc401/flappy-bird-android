@@ -23,8 +23,14 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
     private val openingLocation = 500F
     private val openingSize = 200F
 
-    private lateinit var topRect: Rect
-    private lateinit var bottomRect: Rect
+    val topRect: Rect
+        get() = _topRect
+
+    val bottomRect: Rect
+        get() = _bottomRect
+
+    private lateinit var _topRect: Rect
+    private lateinit var _bottomRect: Rect
 
     init {
         updateRects()
@@ -33,13 +39,13 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
 
     private fun updateRects() {
         val pos = pos.toInt()
-        topRect = Rect(
+        _topRect = Rect(
             pos,
             0,
             (pos+width).toInt(),
             openingLocation.toInt()
         )
-        bottomRect = Rect(
+        _bottomRect = Rect(
             pos,
             (openingLocation+openingSize).toInt(),
             (pos+width).toInt(),
@@ -75,9 +81,9 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
     }
 
     fun draw(canvas: Canvas) {
-        canvas.drawRect(topRect, paint)
-        dealWithOutOfBoundsRect(topRect, canvas)
-        canvas.drawRect(bottomRect, paint)
-        dealWithOutOfBoundsRect(bottomRect, canvas)
+        canvas.drawRect(_topRect, paint)
+        dealWithOutOfBoundsRect(_topRect, canvas)
+        canvas.drawRect(_bottomRect, paint)
+        dealWithOutOfBoundsRect(_bottomRect, canvas)
     }
 }
