@@ -5,6 +5,10 @@ import android.graphics.Color
 import android.graphics.Paint
 
 class Flappy(pos: Vec2) {
+    companion object {
+        val flapVelocity = Vec2(0F, -0.8F)
+        const val radius = 10F
+    }
     private val paint = Paint().apply {
         isAntiAlias = true
         color = Color.GREEN
@@ -16,7 +20,7 @@ class Flappy(pos: Vec2) {
     private val acc = GameView.gameGravity
 
     init {
-        circle = Circle(pos, 10F)
+        circle = Circle(pos, radius)
     }
 
     fun update(deltaT: Number) {
@@ -25,7 +29,7 @@ class Flappy(pos: Vec2) {
     }
 
     fun flap() {
-        vel.y = -0.8F
+        vel = flapVelocity
     }
 
     fun overlaps(obstacle: Obstacle): Boolean {
@@ -33,6 +37,6 @@ class Flappy(pos: Vec2) {
     }
 
     fun draw(canvas: Canvas) {
-        canvas.drawCircle(circle.pos.x, circle.pos.y, circle.radius, paint)
+        canvas.drawCircle(circle.pos.x, circle.pos.y, radius, paint)
     }
 }

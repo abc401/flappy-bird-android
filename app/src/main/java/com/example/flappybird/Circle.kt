@@ -4,16 +4,21 @@ import android.graphics.Rect
 
 class Circle(var pos: Vec2, var radius: Float) {
     fun overlaps(rect: Rect): Boolean {
-        val closestPoint = Vec2(
-            pos.x.coerceIn(
-                rect.left.toFloat(),
-                rect.right.toFloat()
-            ),
-            pos.y.coerceIn(
-                rect.top.toFloat(),
-                rect.bottom.toFloat()
+        val closestPoint: Vec2
+        try {
+            closestPoint = Vec2(
+                pos.x.coerceIn(
+                    rect.left.toFloat(),
+                    rect.right.toFloat()
+                ),
+                pos.y.coerceIn(
+                    rect.top.toFloat(),
+                    rect.bottom.toFloat()
+                )
             )
-        )
+        } catch (e: IllegalArgumentException) {
+            return false
+        }
         val distance = closestPoint - pos
         return distance.magnitude() < radius
     }

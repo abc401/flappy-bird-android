@@ -4,15 +4,20 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import kotlin.math.abs
 
 
-class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
-//    private var pos = viewDimensions.x
-
+class Obstacle(
+    private val viewDimensions: Vec2,
+) {
     companion object {
         const val width = 50F
         const val vel = -0.3F
+        val maxOpeningSize = abs(Flappy.flapVelocity.y)*400 + Flappy.radius*2
+        val minOpeningSize = abs(Flappy.flapVelocity.y)*200 + Flappy.radius*2
     }
+
+    private var pos = viewDimensions.x
 
     private val paint = Paint().apply {
         isAntiAlias = true
@@ -20,8 +25,13 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
         style = Paint.Style.FILL_AND_STROKE
     }
 
-    private val openingLocation = 500F
-    private val openingSize = 200F
+    var leftOpeningLocation = 0F
+
+    val openingLocation: Float
+        get() = _openingLocation
+
+    private var _openingLocation = 0F
+    private var openingSize = 0F
 
     val topRect: Rect
         get() = _topRect
@@ -33,6 +43,7 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
     private lateinit var _bottomRect: Rect
 
     init {
+        randomize()
         updateRects()
     }
 
@@ -43,11 +54,11 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
             pos,
             0,
             (pos+width).toInt(),
-            openingLocation.toInt()
+            _openingLocation.toInt()
         )
         _bottomRect = Rect(
             pos,
-            (openingLocation+openingSize).toInt(),
+            (_openingLocation+openingSize).toInt(),
             (pos+width).toInt(),
             viewDimensions.y.toInt()
         )
@@ -55,17 +66,32 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
 
     fun update(deltaT: Number) {
         pos += vel * deltaT.toFloat()
-        tryReset()
+//        tryReset()
         updateRects()
     }
 
-    private fun tryReset() {
-        if (shouldReset()) {
-            pos = viewDimensions.x - width
-        }
+    private fun randomize() {
+        openingSize = lerp(minOpeningSize, maxOpeningSize, Math.random().toFloat())
+        _openingLocation = lerp(
+            0F,
+            viewDimensions.y-openingSize,
+            Math.random().toFloat()
+        )
+        println("Opening Location: $_openingLocation")
+        println("Opening Size: $openingSize")
     }
 
-    private fun shouldReset(): Boolean {
+
+    private fun tryReset() {
+        if (!shouldReset()) {
+            return
+        }
+        randomize()
+        val openingLocationDifference = abs(openingLocation - leftOpeningLocation)
+        pos = viewDimensions.x - width + openingLocationDifference * 0.5F
+    }
+
+    fun shouldReset(): Boolean {
         if (pos+width < 0) {
             return true
         }
@@ -82,8 +108,8 @@ class Obstacle(private var pos: Float, private val viewDimensions: Vec2) {
 
     fun draw(canvas: Canvas) {
         canvas.drawRect(_topRect, paint)
-        dealWithOutOfBoundsRect(_topRect, canvas)
+//        dealWithOutOfBoundsRect(_topRect, canvas)
         canvas.drawRect(_bottomRect, paint)
-        dealWithOutOfBoundsRect(_bottomRect, canvas)
+//        dealWithOutOfBoundsRect(_bottomRect, canvas)
     }
 }

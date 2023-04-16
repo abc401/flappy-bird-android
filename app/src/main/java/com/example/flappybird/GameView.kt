@@ -6,15 +6,16 @@ import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.View
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-
+import kotlin.math.abs
 
 
 @OptIn(DelicateCoroutinesApi::class)
 class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     companion object {
         val gameGravity = Vec2(0F, 0.002F)
-        const val minObstacleGap = 100
     }
 
     private val dimensions = run {
@@ -29,16 +30,17 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
     private val flappy: Flappy
 
-    private var obstacles: Array<Obstacle>
+    private var obstaclesMutex = Mutex()
+    private var obstacles: Queue<Obstacle> = LinkedList()
 
     private var previousFrameStartTime = 0L
     private var currentFrameStartTime = SystemClock.elapsedRealtime()
     private var deltaT = 0L
 
-
     init {
         playing.set(true)
         flappy = Flappy(Vec2(30F, dimensions.y/2))
+        obstacles.add(Obstacle(dimensions))
 
         updateDeltaT()
 
@@ -46,22 +48,57 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
             flappy.flap()
         }
 
-        val obstacleCount = (dimensions.x / (Obstacle.width + minObstacleGap)).toInt()
-        val totalEmptySpace = dimensions.x - (obstacleCount * Obstacle.width)
-        val actualObstacleGap = totalEmptySpace / obstacleCount
-
-        var currentObstaclePosition = dimensions.x
-        obstacles = Array(obstacleCount) {
-            val obstacle = Obstacle(currentObstaclePosition, dimensions)
-            currentObstaclePosition += Obstacle.width + actualObstacleGap
-            obstacle
-        }
-
         GlobalScope.launch {
-            while (playing.get()) {
-                update()
-                delay(15L)
+            launch {
+                obstacleManagementLoop()
             }
+            launch {
+                gameLoop()
+            }
+        }
+    }
+
+    private suspend fun removeOutOfBoundsObstacles() {
+        obstaclesMutex.lock()
+        var obstacle = obstacles.element()
+        obstaclesMutex.unlock()
+
+        while (obstacle.shouldReset()) {
+            obstaclesMutex.lock()
+            obstacles.remove()
+            obstacle = obstacles.element()
+            obstaclesMutex.unlock()
+        }
+    }
+
+    private suspend fun addObstacle() {
+        val newObstacle = Obstacle(dimensions)
+
+        obstaclesMutex.lock()
+        val lastObstacle = obstacles.last()
+        obstaclesMutex.unlock()
+
+        val distBetweenOpenings = abs(
+            lastObstacle.openingLocation - newObstacle.openingLocation
+        )
+        delay(200L + distBetweenOpenings.toLong()*2)
+
+        obstaclesMutex.lock()
+        obstacles.add(newObstacle)
+        obstaclesMutex.unlock()
+    }
+
+    private suspend fun obstacleManagementLoop() {
+        while (playing.get()) {
+            removeOutOfBoundsObstacles()
+            addObstacle()
+        }
+    }
+
+    private suspend fun gameLoop() {
+        while (playing.get()) {
+            update()
+            delay(15L)
         }
     }
 
@@ -71,12 +108,15 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         deltaT = currentFrameStartTime - previousFrameStartTime
     }
 
-    private fun update() {
+    private suspend fun update() {
         updateDeltaT()
         flappy.update(deltaT)
-        obstacles.forEach {
-            it.update(deltaT)
-        }
+
+        obstaclesMutex.lock()
+            obstacles.forEach { it.update(deltaT) }
+            println("Array Size: ${obstacles.size}")
+        obstaclesMutex.unlock()
+
         if (isGameOver()) {
             onGameOver()
         }
