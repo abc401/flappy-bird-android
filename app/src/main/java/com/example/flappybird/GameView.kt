@@ -10,12 +10,14 @@ import kotlinx.coroutines.sync.Mutex
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
+import kotlin.math.pow
 
 
 @OptIn(DelicateCoroutinesApi::class)
 class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     companion object {
         val gameGravity = Vec2(0F, 0.002F)
+        val fps = 60L
     }
 
     private val dimensions = run {
@@ -27,22 +29,26 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     private var playing = AtomicBoolean()
+    private var paused = AtomicBoolean()
 
     private val flappy: Flappy
 
     private var obstaclesMutex = Mutex()
     private var obstacles: Queue<Obstacle> = LinkedList()
 
-    private var previousFrameStartTime = 0L
-    private var currentFrameStartTime = SystemClock.elapsedRealtime()
     private var deltaT = 0L
+    private var previousFrameStartTime = 0L
+    private var currentFrameStartTime = 0L
+
 
     init {
         playing.set(true)
+        paused.set(false)
+
         flappy = Flappy(Vec2(30F, dimensions.y/2))
         obstacles.add(Obstacle(dimensions))
 
-        updateDeltaT()
+        sanitizeDeltaT()
 
         this.setOnClickListener {
             flappy.flap()
@@ -61,14 +67,11 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private suspend fun removeOutOfBoundsObstacles() {
         obstaclesMutex.lock()
         var obstacle = obstacles.element()
-        obstaclesMutex.unlock()
-
         while (obstacle.shouldReset()) {
-            obstaclesMutex.lock()
             obstacles.remove()
             obstacle = obstacles.element()
-            obstaclesMutex.unlock()
         }
+        obstaclesMutex.unlock()
     }
 
     private suspend fun addObstacle() {
@@ -76,11 +79,11 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
         obstaclesMutex.lock()
         val lastObstacle = obstacles.last()
-        obstaclesMutex.unlock()
-
         val distBetweenOpenings = abs(
             lastObstacle.openingLocation - newObstacle.openingLocation
         )
+        obstaclesMutex.unlock()
+
         delay(200L + distBetweenOpenings.toLong()*2)
 
         obstaclesMutex.lock()
@@ -90,6 +93,9 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
     private suspend fun obstacleManagementLoop() {
         while (playing.get()) {
+            if (paused.get()) {
+                continue
+            }
             removeOutOfBoundsObstacles()
             addObstacle()
         }
@@ -97,8 +103,10 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
     private suspend fun gameLoop() {
         while (playing.get()) {
-            update()
-            delay(15L)
+            if (!paused.get()) {
+                update()
+            }
+            delay(1000/fps )
         }
     }
 
@@ -106,6 +114,12 @@ class GameView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         previousFrameStartTime = currentFrameStartTime
         currentFrameStartTime = SystemClock.elapsedRealtime()
         deltaT = currentFrameStartTime - previousFrameStartTime
+    }
+
+    private fun sanitizeDeltaT() {
+        deltaT = 10.toDouble().pow(9).toLong() / fps
+        previousFrameStartTime = SystemClock.elapsedRealtimeNanos()
+        currentFrameStartTime = previousFrameStartTime + deltaT
     }
 
     private suspend fun update() {
