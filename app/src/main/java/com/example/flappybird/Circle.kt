@@ -3,7 +3,11 @@ package com.example.flappybird
 import android.graphics.Rect
 
 class Circle(var pos: Vec2, var radius: Float) {
-    fun overlaps(rect: Rect): Boolean {
+    fun checkOverlap(rect: Rect): Boolean {
+        return vecToClosestPointOn(rect).magnitude() < radius
+    }
+
+    fun vecToClosestPointOn(rect: Rect): Vec2 {
         val closestPoint: Vec2
         try {
             closestPoint = Vec2(
@@ -17,9 +21,9 @@ class Circle(var pos: Vec2, var radius: Float) {
                 )
             )
         } catch (e: IllegalArgumentException) {
-            return false
+            println("Exception in Circle.vecToClosestPointOn")
+            return Vec2(Float.MAX_VALUE, Float.MAX_VALUE)
         }
-        val distance = closestPoint - pos
-        return distance.magnitude() < radius
+        return closestPoint - pos
     }
 }

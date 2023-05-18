@@ -1,14 +1,12 @@
 package com.example.flappybird
 
 import android.os.SystemClock
-import java.time.Duration
-import kotlin.math.pow
 
 class FrameRateManager(private val fps: Long) {
     var deltaT = 0L
     private var previousFrameStartTime = 0L
     private var currentFrameStartTime = 0L
-    
+
     init {
         sanitize()
     }
@@ -19,14 +17,18 @@ class FrameRateManager(private val fps: Long) {
         currentFrameStartTime = previousFrameStartTime + deltaT
     }
 
-    private fun updateDeltaT() {
+    private fun update() {
         previousFrameStartTime = currentFrameStartTime
         currentFrameStartTime = SystemClock.elapsedRealtime()
         deltaT = currentFrameStartTime - previousFrameStartTime
     }
 
     suspend fun delay() {
-        kotlinx.coroutines.delay(deltaT)
-        updateDeltaT()
+        delayWithoutUpdate()
+        update()
+    }
+
+    suspend fun delayWithoutUpdate() {
+        kotlinx.coroutines.delay(1000/fps)
     }
 }

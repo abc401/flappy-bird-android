@@ -15,6 +15,7 @@ class Obstacle(
         const val vel = -0.3F
         val maxOpeningSize = abs(Flappy.flapVelocity.y)*400 + Flappy.radius*2
         val minOpeningSize = abs(Flappy.flapVelocity.y)*200 + Flappy.radius*2
+        const val minPipeLength = 100
     }
 
     private var pos = viewDimensions.x
@@ -24,8 +25,6 @@ class Obstacle(
         color = Color.RED
         style = Paint.Style.FILL_AND_STROKE
     }
-
-    var leftOpeningLocation = 0F
 
     val openingLocation: Float
         get() = _openingLocation
@@ -66,15 +65,14 @@ class Obstacle(
 
     fun update(deltaT: Number) {
         pos += vel * deltaT.toFloat()
-//        tryReset()
         updateRects()
     }
 
     private fun randomize() {
         openingSize = lerp(minOpeningSize, maxOpeningSize, Math.random().toFloat())
         _openingLocation = lerp(
-            0F,
-            viewDimensions.y-openingSize,
+            minPipeLength.toFloat(),
+            viewDimensions.y-openingSize-minPipeLength,
             Math.random().toFloat()
         )
         println("Opening Location: $_openingLocation")
@@ -82,34 +80,15 @@ class Obstacle(
     }
 
 
-    private fun tryReset() {
-        if (!shouldReset()) {
-            return
-        }
-        randomize()
-        val openingLocationDifference = abs(openingLocation - leftOpeningLocation)
-        pos = viewDimensions.x - width + openingLocationDifference * 0.5F
-    }
-
-    fun shouldReset(): Boolean {
+    fun isUseless(): Boolean {
         if (pos+width < 0) {
             return true
         }
         return false
     }
 
-    private fun dealWithOutOfBoundsRect(rect: Rect, canvas: Canvas) {
-        if (rect.left < 0) {
-            rect.left = (viewDimensions.x + rect.left).toInt()
-            rect.right = (viewDimensions.x + rect.right).toInt()
-            canvas.drawRect(rect, paint)
-        }
-    }
-
     fun draw(canvas: Canvas) {
         canvas.drawRect(_topRect, paint)
-//        dealWithOutOfBoundsRect(_topRect, canvas)
         canvas.drawRect(_bottomRect, paint)
-//        dealWithOutOfBoundsRect(_bottomRect, canvas)
     }
 }
