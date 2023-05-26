@@ -5,6 +5,7 @@ import kotlin.math.abs
 
 class ObstacleManager(private val viewDimensions: Vec2) {
     var obstacles: Queue<Obstacle> = LinkedList()
+    var score = 0
     private var nextObstacleToSpawn = Obstacle(viewDimensions)
     private var timeSinceLastObstacleSpawn = 0L
 
@@ -44,17 +45,38 @@ class ObstacleManager(private val viewDimensions: Vec2) {
     }
 
     private fun updateObstacles(deltaT: Long) {
-        obstacles.forEach { it.update(deltaT) }
+        for (obstacle in obstacles) {
+            obstacle.update(deltaT)
+        }
+    }
+
+    private fun updateScoreMetaData(flappyPos: Vec2) {
+        for (obstacle in obstacles) {
+            obstacle.updateFlappyData(flappyPos)
+        }
+    }
+
+    private fun updateScore() {
+        for (obstacle in obstacles) {
+            if (!obstacle.flappyJustCrossedObstacle()) continue
+            score += 1
+            break
+        }
     }
 
     inline fun forEachObstacle(action: (Obstacle) -> Unit) {
         obstacles.forEach(action)
     }
 
-    fun update(deltaT: Long) {
+    fun update(flappyPos: Vec2, deltaT: Long) {
         timeSinceLastObstacleSpawn += deltaT
+
         updateObstacles(deltaT)
         removeOutOfBoundsObstacles()
+
+        updateScoreMetaData(flappyPos)
+        updateScore()
+
         trySpawnNewObstacle()
     }
 }

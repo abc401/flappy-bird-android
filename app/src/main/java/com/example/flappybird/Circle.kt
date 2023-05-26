@@ -22,7 +22,7 @@ class Circle(var pos: Vec2, var radius: Float) {
             )
         } catch (e: IllegalArgumentException) {
             println("Exception in Circle.vecToClosestPointOn")
-            return Vec2(Float.MAX_VALUE, Float.MAX_VALUE)
+            return Vec2(Float.MAX_VALUE)
         }
         return closestPoint - pos
     }

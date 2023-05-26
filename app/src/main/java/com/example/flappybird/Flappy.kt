@@ -7,7 +7,7 @@ import android.graphics.Rect
 
 class Flappy(pos: Vec2) {
     companion object {
-        val flapVelocity = Vec2(0F, -0.8F)
+        val flapVelocity = Vec2(0, -0.8)
         const val radius = 10F
     }
     private val paint = Paint().apply {
@@ -17,6 +17,8 @@ class Flappy(pos: Vec2) {
     }
 
     private var circle: Circle
+    val pos: Vec2
+        get() = circle.pos
     private var vel = Vec2()
     private val acc = GameView.gameGravity
 
@@ -38,10 +40,11 @@ class Flappy(pos: Vec2) {
     }
 
     fun checkAndCorrectOverlap(obstacle: Obstacle): Boolean {
-        return checkAndCorrectOverlap(obstacle.topRect) || checkAndCorrectOverlap(obstacle.bottomRect)
+        return checkAndCorrectOverlap(obstacle.topRect)
+            || checkAndCorrectOverlap(obstacle.bottomRect)
     }
 
-    fun checkAndCorrectOverlap(rect: Rect): Boolean {
+    private fun checkAndCorrectOverlap(rect: Rect): Boolean {
         val delta = circle.vecToClosestPointOn(rect)
         if (delta.magnitude() > circle.radius) {
             return false
@@ -51,6 +54,6 @@ class Flappy(pos: Vec2) {
     }
 
     fun draw(canvas: Canvas) {
-        canvas.drawCircle(circle.pos.x, circle.pos.y, radius, paint)
+        canvas.drawCircle(pos.x, pos.y, radius, paint)
     }
 }

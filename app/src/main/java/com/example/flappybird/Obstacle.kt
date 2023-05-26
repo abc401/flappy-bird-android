@@ -26,6 +26,9 @@ class Obstacle(
         style = Paint.Style.FILL_AND_STROKE
     }
 
+    private var flappyPreviouslyBehindObstacle = true
+    private var flappyCurrentlyBehindObstacle = true
+
     val openingLocation: Float
         get() = _openingLocation
 
@@ -46,6 +49,14 @@ class Obstacle(
         updateRects()
     }
 
+    fun updateFlappyData(flappyPosition: Vec2) {
+        flappyPreviouslyBehindObstacle = flappyCurrentlyBehindObstacle
+        flappyCurrentlyBehindObstacle = flappyPosition.x < pos+width
+    }
+
+    fun flappyJustCrossedObstacle(): Boolean {
+        return flappyPreviouslyBehindObstacle && !flappyCurrentlyBehindObstacle
+    }
 
     private fun updateRects() {
         val pos = pos.toInt()
@@ -80,12 +91,7 @@ class Obstacle(
     }
 
 
-    fun isUseless(): Boolean {
-        if (pos+width < 0) {
-            return true
-        }
-        return false
-    }
+    fun isUseless() = pos+width < 0
 
     fun draw(canvas: Canvas) {
         canvas.drawRect(_topRect, paint)

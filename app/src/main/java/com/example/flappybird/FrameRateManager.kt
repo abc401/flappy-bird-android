@@ -28,7 +28,7 @@ class FrameRateManager(private val fps: Long) {
         update()
     }
 
-    suspend fun delayWithoutUpdate() {
+    private suspend fun delayWithoutUpdate() {
         kotlinx.coroutines.delay(1000/fps)
     }
 }
